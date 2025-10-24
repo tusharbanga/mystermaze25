@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Rules - The Magical Maze Quest</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Uncial+Antiqua&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Cinzel', serif;
+            color: #f4e8c1; /* Parchment text color */
+            background-image: url('forest.png'); /* Harry Potter themed background (Hogwarts castle or similar; replace with your image URL) */
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            overflow-x: hidden;
+            perspective: 1000px; /* For 3D effects */
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .title {
+            text-align: center;
+            font-family: 'Uncial Antiqua', cursive;
+            font-size: 3em;
+            color: #ffd700; /* Golden snitch color */
+            text-shadow: 0 0 10px #ffd700, 0 0 20px #ff4500;
+            animation: glow 2s ease-in-out infinite alternate;
+            margin-bottom: 40px;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 10px #ffd700, 0 0 20px #ff4500; }
+            to { text-shadow: 0 0 20px #ffd700, 0 0 30px #ff4500; }
+        }
+
+        .rule-section {
+            background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent for magical overlay */
+            border: 2px solid #ffd700;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+            transform-style: preserve-3d;
+            transition: transform 0.5s ease;
+        }
+
+        .rule-section:hover {
+            transform: rotateY(10deg) rotateX(5deg) scale(1.05);
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.8);
+        }
+
+        .rule-title {
+            font-family: 'Uncial Antiqua', cursive;
+            font-size: 1.8em;
+            color: #ff4500; /* Fiery orange */
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px #000;
+        }
+
+        .rule-content {
+            font-size: 1.2em;
+            line-height: 1.6;
+            list-style-type: none; /* For custom bullets */
+        }
+
+        .rule-content ul {
+            padding-left: 20px;
+        }
+
+        .rule-content li {
+            position: relative;
+            padding-left: 25px;
+        }
+
+        .rule-content li::before {
+            content: '✨'; /* Magical spark */
+            position: absolute;
+            left: 0;
+            color: #ffd700;
+            animation: sparkle 1s infinite alternate;
+        }
+
+        @keyframes sparkle {
+            from { opacity: 1; }
+            to { opacity: 0.5; }
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2.5em;
+            }
+
+            .rule-title {
+                font-size: 1.5em;
+            }
+
+            .rule-content {
+                font-size: 1em;
+            }
+
+            .rule-section:hover {
+                transform: rotateY(5deg) rotateX(3deg) scale(1.03); /* Softer on mobile */
+            }
+        }
+
+        /* Particle effects for magic */
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="magic-particles"></canvas>
+    <div class="container">
+        <h1 class="title">The Enchanted Rules of the Mystery Maze</h1>
+        
+        <div class="rule-section">
+            <h2 class="rule-title">1. The Login Incantation</h2>
+            <div class="rule-content">
+                <ul>
+                    <li>The website link will be provided at the start of the game, much like a portkey to the adventure.</li>
+                    <li>The team leader must log in using their Roll Number as the username and team leader’s registered mobile number as the password, whispering the secrets to the digital guardian.</li>
+                    <li>Only the team leader can log in with the mobile number provided during registration, for the magic binds it so.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="rule-section">
+            <h2 class="rule-title">2. Commencing the Spellbinding Game</h2>
+            <div class="rule-content">
+                <ul>
+                    <li>Login is permitted once the game period begins, when the stars align and the hourglass turns.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="rule-section">
+            <h2 class="rule-title">3. Unraveling the Riddles</h2>
+            <div class="rule-content">
+                <ul>
+                    <li>Clicking the "Enter The Maze" button will present players with a riddle, conjured from the depths of mystery.</li>
+                    <li>Teams must solve the riddle in the fewest attempts and in the shortest time possible, racing against the sands of time.</li>
+                    <li>Each riddle corresponds to a specific spot on the college campus, and players must reach the spot to enter the code found there, like seeking hidden chambers in Hogwarts.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="rule-section">
+            <h2 class="rule-title">4. The Scoring Enchantment</h2>
+            <div class="rule-content">
+                <ul>
+                    <li>Points are awarded based on the number of attempts to solve the riddle:</li>
+                    <li>· 1st correct attempt: 10 points</li>
+                    <li>· 2nd correct attempt: 8 points</li>
+                    <li>· 3rd correct attempt: 6 points</li>
+                    <li>· 4th correct attempt: 2 points</li>
+                    <li>· 5th correct attempt: 1 point</li>
+                    <li>After five attempts, no points will be awarded, and the team will automatically move to the next question, as the riddle's charm fades.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="rule-section">
+            <h2 class="rule-title">5. Progression Through the Riddles</h2>
+            <div class="rule-content">
+                <ul>
+                    <li>Players must solve as many riddles as possible in the least amount of time, weaving through the labyrinth of enigmas.</li>
+                    <li>Five incorrect attempts on a single riddle will result in a score of 0 for that riddle, and the team will be moved to the next one, banished by the riddle's guardian.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="rule-section">
+            <h2 class="rule-title">6. The Nature of Riddles and Spots</h2>
+            <div class="rule-content">
+                <ul>
+                    <li>No team will receive the same riddle twice, for the magic ensures variety in trials.</li>
+                    <li>All riddle answers (i.e., spots) are located within the college campus buildings, hidden like secrets in the Room of Requirement.</li>
+                    <li>If the team closes the website then the team will have to re-login and game will start from where it was left, as the spell remembers your place.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="rule-section">
+            <h2 class="rule-title">7. Device Wand Requirements</h2>
+            <div class="rule-content">
+                <ul>
+                    <li>The website only supports Android devices, the chosen wands for this quest.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript for magical particle effects (sparkles)
+        const canvas = document.getElementById('magic-particles');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 3 + 1;
+                this.speedX = Math.random() * 2 - 1;
+                this.speedY = Math.random() * 2 - 1;
+                this.color = `hsl(${Math.random() * 60 + 30}, 100%, 50%)`; // Golden hues
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.size > 0.2) this.size -= 0.1;
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        let particles = [];
+
+        function handleParticles() {
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+
+                if (particles[i].size <= 0.2) {
+                    particles.splice(i, 1);
+                    i--;
+                }
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (particles.length < 100) {
+                particles.push(new Particle());
+            }
+            handleParticles();
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>
