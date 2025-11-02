@@ -7,7 +7,10 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Harry+P&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <style>
+        /* [ORIGINAL CSS STYLES ARE RETAINED HERE] */
         body {
             background: url('greathall.png') no-repeat center center fixed;
             background-size: cover;
@@ -228,7 +231,7 @@
         @keyframes leaderboard-float {
             0% { transform: rotateX(5deg) rotateY(10deg) translateY(0); }
             50% { transform: rotateX(8deg) rotateY(5deg) translateY(-3px); }
-            100% { transform: rotateX(5deg) rotateY(10deg) translateY(0); }
+            100% { transform: translateY(0px) rotateX(5deg) rotateY(10deg); }
         }
         @keyframes pulse {
             0% { transform: scale(1); }
@@ -254,6 +257,7 @@
         <h1 class="text-2xl font-['Harry_P'] text-yellow-400 sm:text-3xl md:text-4xl">Riddle Quest⚡️</h1>
         <div class="flex items-center space-x-2 sm:space-x-4">
             <span id="score-display" class="text-base sm:text-xl">Points: 0</span>
+            <button id="logout-btn" onclick="safeLogout()" class="px-2 py-1 bg-red-800 text-white rounded hover:bg-red-700"><i class="fas fa-sign-out-alt"></i></button> 
             <button id="mute-btn" class="px-2 py-1 bg-gray-800 rounded hover:bg-gray-700"><i class="fas fa-volume-up"></i></button>
         </div>
     </header>
@@ -294,9 +298,26 @@
     <audio id="wrong-sound" src="https://www.soundjay.com/buttons/button-10.mp3"></audio>
 
 <script>
-// ------------------------- GOOGLE APPS SCRIPT URL -------------------------
-// !!! IMPORTANT: Replace this with your actual deployed Apps Script URL !!!
+// ------------------------- GOOGLE APPS SCRIPT URL (Used for Leaderboard/Score) -------------------------
 const backendUrl = "/api/gasProxy";
+
+// ------------------------- 🔥 NEW FIREBASE CONFIGURATION (For Global Progress Sync) 🔥 -------------------------
+const firebaseConfig = {
+    // NEW PROJECT DETAILS: login-d5978
+    apiKey: "AIzaSyB7-MsCUkAfyaYxPBYHFiiPr3mpXuHZ7MM", 
+    authDomain: "login-d5978.firebaseapp.com",
+    projectId: "login-d5978",
+    storageBucket: "login-d5978.firebasestorage.app",
+    messagingSenderId: "913994164259",
+    appId: "1:913994164259:web:d7193c0f5842e7be6e6996",
+    measurementId: "G-7HR05W3KV1"
+};
+
+// Initialize Firebase and Firestore
+const app = firebase.initializeApp(firebaseConfig);
+const db = app.firestore(); // 'db' variable ab Firestore database ko point karega
+// ------------------------- END FIREBASE CONFIGURATION -------------------------
+
 let team = {
     id: null,
     name: "Gryffindor",
@@ -378,6 +399,80 @@ sidebarToggle.addEventListener('click', () => {
     sidebarToggle.innerHTML = sidebar.classList.contains('open') ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
 });
 
+// ------------------------- 🔥 FIREBASE GLOBAL PROGRESS FUNCTIONS 🔥 -------------------------
+
+// NEW: Progress ko Firebase se load karega
+async function loadGlobalProgress() {
+    try {
+        const docRef = db.collection("progress").doc(team.id); 
+        const docSnap = await docRef.get();
+
+        if (docSnap.exists) {
+            console.log("Progress loaded from Firebase.");
+            return docSnap.data(); 
+        } else {
+            console.log("No progress found in Firebase for this user.");
+            return null;
+        }
+    } catch (error) {
+        console.error("Failed to load progress from Firebase:", error);
+        return null;
+    }
+}
+
+// UPDATED: Progress ko Firebase par Transaction ke saath save karega
+async function saveGlobalProgress() {
+    if (!team.id) return;
+    const progressRef = db.collection("progress").doc(team.id);
+
+    try {
+        await db.runTransaction(async (transaction) => {
+            // Transaction ensures data integrity across multiple devices
+            transaction.set(progressRef, userProgress);
+        });
+        console.log("Progress saved via transaction.");
+
+    } catch (error) {
+        console.error("Failed to save progress via transaction:", error);
+    }
+}
+
+// ------------------------- GRACEFUL LOGOUT FUNCTION (CRITICAL FOR SESSION LOCK) -------------------------
+async function safeLogout() {
+    const rollNumber = localStorage.getItem('roll');
+
+    if (rollNumber) {
+        try {
+            const statusRef = db.collection("onlineStatus").doc(rollNumber);
+            // 💥 Explicitly set isOnline to false
+            await statusRef.set({ 
+                isOnline: false, 
+                logoutTime: firebase.firestore.FieldValue.serverTimestamp() 
+            }); 
+            console.log("Firebase status successfully set to offline.");
+        } catch (error) {
+            console.error("Failed to set status offline on logout:", error);
+            // We ignore the error and proceed to logout locally
+        }
+    }
+
+    // 2. Clear Local Storage and Redirect
+    localStorage.removeItem('roll');
+    alert("You have been securely logged out. You can now log in on another device.");
+    window.location.href = 'login.html';
+}
+
+// NEW: Event listener for when the browser/tab is closed/reloaded
+window.addEventListener('beforeunload', (e) => {
+    const rollNumber = localStorage.getItem('roll');
+    if (rollNumber) {
+        // Use an asynchronous call that the browser might process before closing
+        db.collection("onlineStatus").doc(rollNumber).set({ isOnline: false });
+    }
+});
+// ------------------------- END LOGOUT HANDLERS -------------------------
+
+
 // ------------------------- INIT GAME FUNCTION -------------------------
 async function initGame() {
     const rollNumber = getUserId();
@@ -387,6 +482,22 @@ async function initGame() {
         return;
     }
     team.id = rollNumber;
+
+    // 🚨 SESSION STATUS CHECK (Added for robustness, though login.html does the main check)
+    try {
+        const statusRef = db.collection("onlineStatus").doc(team.id);
+        const statusSnap = await statusRef.get();
+        if (!statusSnap.exists || !statusSnap.data().isOnline) {
+             alert("Your session was closed on another device or did not start correctly. Please log in again.");
+             localStorage.removeItem('roll');
+             window.location.href = 'login.html';
+             return;
+        }
+    } catch (error) {
+        console.error("Session integrity check failed:", error);
+        // Continue if check fails, relying on manual logout/relogin
+    }
+
 
     getRiddleBtn.classList.add('hidden');
     riddleCard.classList.remove('hidden');
@@ -399,26 +510,27 @@ async function initGame() {
         if (riddlesData.success && riddlesData.questions && riddlesData.questions.length > 0) {
             allRiddles = riddlesData.questions;
             
-            const localProgress = localStorage.getItem(`progress_${team.id}`);
-            if (localProgress) {
-                userProgress = JSON.parse(localProgress);
+            // 🔄 Load progress from Firebase
+            const globalProgress = await loadGlobalProgress(); 
+            
+            if (globalProgress) {
+                userProgress = globalProgress;
                 teamRiddles = userProgress.riddleOrder;
                 currentRiddleIndex = userProgress.currentRiddleIndex;
             } else {
-                // 1. Shuffle all riddles from the backend using the user's ID as seed
+                // Agar global progress nahi mila, toh naya progress generate karo aur save karo
                 let shuffledRiddles = shuffleArray([...allRiddles], team.id);
                 
-                // 2. ⭐ MODIFICATION: Select only the first 10 riddles for the quest
                 const QUEST_SIZE = 10;
                 teamRiddles = shuffledRiddles.slice(0, QUEST_SIZE);
                 
                 userProgress = {
-                    riddleOrder: teamRiddles, // Save the fixed 10 riddles
+                    riddleOrder: teamRiddles, 
                     solvedRiddles: {},
                     partialRiddles: {},
                     currentRiddleIndex: 0
                 };
-                saveLocalProgress();
+                await saveGlobalProgress(); // Naya progress globally Firebase par save karo
             }
 
             progressMap.innerHTML = '';
@@ -468,7 +580,7 @@ function startTimer() {
 
 // ------------------------- LOAD RIDDLE -------------------------
 function loadRiddle() {
-    saveLocalProgress();
+    saveGlobalProgress(); // Progress ko Firebase par update karo
 
     if (currentRiddleIndex >= teamRiddles.length) { // Checks against the 10-riddle limit
         showFinalLeaderboard();
@@ -531,6 +643,7 @@ submitBtn.addEventListener('click', async () => {
 
     const currentRiddle = teamRiddles[currentRiddleIndex];
     try {
+        // NOTE: Yeh checkAnswer call abhi bhi aapke GAS proxy par jaa rahi hai
         const res = await fetch(`${backendUrl}?path=checkAnswer&qid=${currentRiddle.qid}&answer=${userAnswer}`);
         const data = await res.json();
         
@@ -544,11 +657,10 @@ submitBtn.addEventListener('click', async () => {
             }
             userProgress.solvedRiddles[currentRiddle.qid] = { attempts: attemptsUsed, score: points };
             userProgress.currentRiddleIndex = currentRiddleIndex + 1;
-            saveLocalProgress();
+            await saveGlobalProgress(); // Progress Firebase par save hua!
 
-            // Key change: Send the riddle ID and points, not the total score
+            // Points ko leaderboard aur score update ke liye GAS backend par bhejte hain
             await saveRiddlePointsToBackend(currentRiddle.qid, points);
-            // Update the display after the backend has been notified
             await updateScoreDisplay();
 
             const randomPraise = praises[Math.floor(Math.random() * praises.length)];
@@ -568,7 +680,7 @@ submitBtn.addEventListener('click', async () => {
             if (attemptsLeft > 0) {
                 if (!userProgress.partialRiddles) userProgress.partialRiddles = {};
                 userProgress.partialRiddles[currentRiddle.qid] = { attemptsUsed: attemptsUsed };
-                saveLocalProgress();
+                await saveGlobalProgress(); // Progress Firebase par save hua!
 
                 backText.textContent = `Incorrect! Try again.`;
                 cardInner.style.transform = 'rotateY(180deg)';
@@ -587,7 +699,7 @@ submitBtn.addEventListener('click', async () => {
                     delete userProgress.partialRiddles[currentRiddle.qid];
                 }
                 userProgress.currentRiddleIndex = currentRiddleIndex + 1;
-                saveLocalProgress();
+                await saveGlobalProgress(); // Progress Firebase par save hua!
 
                 setTimeout(() => {
                     cardInner.style.transform = 'rotateY(0deg)';
@@ -603,7 +715,7 @@ submitBtn.addEventListener('click', async () => {
     }
 });
 
-// NEW FUNCTION: Send riddle-specific points to the backend
+// NEW FUNCTION: Send riddle-specific points to the backend (GAS)
 async function saveRiddlePointsToBackend(qid, points) {
     try {
         await fetch(`${backendUrl}?path=addPoints`, {
@@ -613,15 +725,10 @@ async function saveRiddlePointsToBackend(qid, points) {
             },
             body: JSON.stringify({ rollNumber: team.id, qid, points }),
         });
-        console.log(`Points for Riddle ${qid} successfully sent to backend.`);
+        console.log(`Points for Riddle ${qid} successfully sent to backend (GAS).`);
     } catch (error) {
-        console.error("Failed to send riddle points to backend:", error);
+        console.error("Failed to send riddle points to backend (GAS):", error);
     }
-}
-
-// ------------------------- SAVE LOCAL PROGRESS -------------------------
-function saveLocalProgress() {
-    localStorage.setItem(`progress_${team.id}`, JSON.stringify(userProgress));
 }
 
 // ------------------------- UPDATE SCORE DISPLAY (Fetch from backend) -------------------------
@@ -686,7 +793,6 @@ function showFinalLeaderboard() {
     teamStats.classList.remove('hidden');
     statsList.innerHTML = Object.keys(userProgress.solvedRiddles).map(qid => {
         const riddle = userProgress.solvedRiddles[qid];
-        // Find the original question text for display (optional, based on your full data structure)
         const originalRiddle = allRiddles.find(r => r.qid === qid); 
         const riddleName = originalRiddle ? `Riddle ${qid}` : `Riddle ${qid}`;
 
