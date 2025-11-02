@@ -6,6 +6,10 @@
 <title>Hogwarts Mystery Maze Login</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=EB+Garamond:wght@400;600&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
 <style>
   :root {
     --gold: #d4af37;
@@ -366,64 +370,120 @@
 <div class="stars" id="stars"></div>
 
 <div class="crest">
-  <img src="crest.png" alt="Hogwarts Crest">
+  <img src="crest.png" alt="Hogwarts Crest">
 </div>
 
 <div class="login-card" id="loginCard">
-  <h1>Mystery Maze Login</h1>
-  <h2>“Unlock the secrets hidden beyond Hogwarts walls...”</h2>
-  <form id="loginForm">
-    <label for="userid">Team Leader Roll No</label>
-    <input type="text" id="userid" name="userid" placeholder="e.g. 23001003132">
+  <h1>Mystery Maze Login</h1>
+  <h2>“Unlock the secrets hidden beyond Hogwarts walls...”</h2>
+  <form id="loginForm">
+    <label for="userid">Team Leader Roll No</label>
+    <input type="text" id="userid" name="userid" placeholder="e.g. 23001003132">
 
-    <label for="teamname">Team Name</label>
-    <input type="text" id="teamname" name="teamname" placeholder="e.g. Team Phoenix">
+    <label for="teamname">Team Name</label>
+    <input type="text" id="teamname" name="teamname" placeholder="e.g. Team Phoenix">
 
-    <label for="password">Leader Phone</label>
-    <input type="password" id="password" name="password" placeholder="10-digit number">
+    <label for="password">Leader Phone</label>
+    <input type="password" id="password" name="password" placeholder="10-digit number">
 
-    <button type="submit" id="loginBtn">Enter the Maze</button>
-  </form>
+    <button type="submit" id="loginBtn">Enter the Maze</button>
+  </form>
 
-  <div class="footer">✨ Only the worthy may pass ✨</div>
+  <div class="footer">✨ Only the worthy may pass ✨</div>
 </div>
 
 <script>
 // Web App URL for your Google Apps Script deployment
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx1XADJH1lBrTb9p_Mb7Uxs_yghk25aoJlB1rkr2zW8TIW3U0l3_v8SUG9SysI6lROpIQ/exec";
 
+// ------------------------- 🔥 FIREBASE CONFIGURATION (NEW PROJECT) 🔥 -------------------------
+// NOTE: These details must match the config in your 'riddles.html' file
+const firebaseConfig = {
+    apiKey: "AIzaSyB7-MsCUkAfyaYxPBYHFiiPr3mpXuHZ7MM", 
+    authDomain: "login-d5978.firebaseapp.com",
+    projectId: "login-d5978",
+    storageBucket: "login-d5978.firebasestorage.app",
+    messagingSenderId: "913994164259",
+    appId: "1:913994164259:web:d7193c0f5842e7be6e6996",
+    measurementId: "G-7HR05W3KV1"
+};
+
+// Initialize Firebase and Firestore
+const app = firebase.initializeApp(firebaseConfig);
+const db = app.firestore();
+// ------------------------- END FIREBASE CONFIGURATION -------------------------
+
+
 // Handle Login
-// Corrected handleLogin function
 async function handleLogin(e) {
-  e.preventDefault();
-  const roll = document.getElementById('userid').value.trim();
-  const phone = document.getElementById('password').value.trim();
-  if (!roll || !phone) {
-    alert("Please fill all fields!");
-    return;
-  }
-  document.getElementById('loginBtn').disabled = true;
-  document.getElementById('loginBtn').textContent = "Entering...";
-  try {
-    // Change to GET request with parameters in the URL
-    const url = `${WEB_APP_URL}?path=login&roll=${roll}&phone=${phone}`;
-    const response = await fetch(url, { method: "GET" });
-    const data = await response.json();
-    if (data.success) {
-      alert("✅ Welcome to the Maze!");
-      localStorage.setItem("roll", roll);
-      window.location.href = "riddles.html";
-    } else {
-      alert("❌ " + data.message);
-    }
-  } catch (err) {
-    console.error("Error during login:", err);
-    alert("⚠️ Unable to connect to server. Try again later!");
-  } finally {
-    document.getElementById('loginBtn').disabled = false;
-    document.getElementById('loginBtn').textContent = "Enter the Maze";
-  }
+    e.preventDefault();
+    const roll = document.getElementById('userid').value.trim();
+    const phone = document.getElementById('password').value.trim();
+    
+    if (!roll || !phone) {
+        alert("⚠️ Please fill all fields (Roll No and Phone)!");
+        return;
+    }
+
+    const loginBtn = document.getElementById('loginBtn');
+    loginBtn.disabled = true;
+    loginBtn.textContent = "Entering..."; // Start with generic loading text
+    
+    try {
+        
+        // --- STEP 1: AUTHENTICATION CHECK (Google Sheets/GAS) ---
+        loginBtn.textContent = "Verifying Credentials...";
+        const gasUrl = `${WEB_APP_URL}?path=login&roll=${roll}&phone=${phone}`;
+        const gasResponse = await fetch(gasUrl, { method: "GET" });
+        const gasData = await gasResponse.json();
+
+        if (!gasData.success) {
+            // ❌ Authentication failed
+            alert("❌ Authentication Failed: " + gasData.message);
+            loginBtn.disabled = false;
+            loginBtn.textContent = "Enter the Maze";
+            return;
+        }
+
+        // --- STEP 2: SINGLE SESSION LOCK CHECK (Firebase) ---
+        // Authentication successful, now check if an active session exists.
+        loginBtn.textContent = "Checking Session Lock...";
+        
+        const statusRef = db.collection("onlineStatus").doc(roll);
+        const statusSnap = await statusRef.get();
+        
+        if (statusSnap.exists && statusSnap.data().isOnline) {
+            // 🚨 LOGIN BLOCKED: User is already active
+            alert("⚠️ This ID is currently active on another device. Please log out from the other device.");
+            
+            // Re-enable button and return
+            loginBtn.disabled = false;
+            loginBtn.textContent = "Enter the Maze";
+            return;
+        }
+
+        // --- STEP 3: SUCCESS & SET ONLINE STATUS ---
+         
+        // ✅ Set online status in Firebase to lock the session
+        await statusRef.set({ 
+            isOnline: true, 
+            loginTime: firebase.firestore.FieldValue.serverTimestamp(),
+            device: navigator.userAgent.substring(0, 150) // Save device info
+        });
+
+        alert("✅ Welcome to the Maze!!!");
+        localStorage.setItem("roll", roll);
+        window.location.href = "riddles.html"; // Redirect to game page
+         
+    } catch (err) {
+        console.error("Error during server communication:", err);
+        // This error handles network issues that prevent contact with GAS OR Firebase
+        alert("⚠️ Fatal Error: Unable to communicate with the server. Please contact admin");
+        loginBtn.disabled = false;
+        loginBtn.textContent = "Enter the Maze";
+    }
 }
+
 // Attach login handler to the form's submit event
 document.getElementById('loginForm').addEventListener('submit', handleLogin);
 </script>
