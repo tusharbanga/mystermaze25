@@ -396,16 +396,16 @@
 // Web App URL for your Google Apps Script deployment
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx1XADJH1lBrTb9p_Mb7Uxs_yghk25aoJlB1rkr2zW8TIW3U0l3_v8SUG9SysI6lROpIQ/exec";
 
-// ------------------------- 🔥 FIREBASE CONFIGURATION (NEW PROJECT) 🔥 -------------------------
-// NOTE: These details must match the config in your 'riddles.html' file
+// ------------------------- 🔥 FIREBASE CONFIGURATION (UPDATED TO MYSTERY MAZE) 🔥 -------------------------
+// NOTE: This now uses the configuration from your new project (mystery-maze-66d38)
 const firebaseConfig = {
-    apiKey: "AIzaSyB7-MsCUkAfyaYxPBYHFiiPr3mpXuHZ7MM", 
-    authDomain: "login-d5978.firebaseapp.com",
-    projectId: "login-d5978",
-    storageBucket: "login-d5978.firebasestorage.app",
-    messagingSenderId: "913994164259",
-    appId: "1:913994164259:web:d7193c0f5842e7be6e6996",
-    measurementId: "G-7HR05W3KV1"
+    apiKey: "AIzaSyCcrlrS6mntArhEmMfOYCj4cIiDuAIiA7o", 
+    authDomain: "mystery-maze-66d38.firebaseapp.com",
+    projectId: "mystery-maze-66d38",
+    storageBucket: "mystery-maze-66d38.firebasestorage.app",
+    messagingSenderId: "499137595833",
+    appId: "1:499137595833:web:ac246bd44e4f391987ce68",
+    measurementId: "G-T6LP1TWK80"
 };
 
 // Initialize Firebase and Firestore
@@ -418,19 +418,19 @@ const db = app.firestore();
 async function handleLogin(e) {
     e.preventDefault();
     const roll = document.getElementById('userid').value.trim();
+    const teamName = document.getElementById('teamname').value.trim(); // NEW: Fetch team name
     const phone = document.getElementById('password').value.trim();
     
-    if (!roll || !phone) {
-        alert("⚠️ Please fill all fields (Roll No and Phone)!");
+    if (!roll || !phone || !teamName) { // Check teamName too
+        alert("⚠️ Please fill all fields (Roll No, Team Name, and Phone)!");
         return;
     }
 
     const loginBtn = document.getElementById('loginBtn');
     loginBtn.disabled = true;
-    loginBtn.textContent = "Entering..."; // Start with generic loading text
+    loginBtn.textContent = "Entering..."; 
     
     try {
-        
         // --- STEP 1: AUTHENTICATION CHECK (Google Sheets/GAS) ---
         loginBtn.textContent = "Verifying Credentials...";
         const gasUrl = `${WEB_APP_URL}?path=login&roll=${roll}&phone=${phone}`;
@@ -446,14 +446,14 @@ async function handleLogin(e) {
         }
 
         // --- STEP 2: SINGLE SESSION LOCK CHECK (Firebase) ---
-        // Authentication successful, now check if an active session exists.
+        // Authentication successful, now check if an active session exists in the NEW project.
         loginBtn.textContent = "Checking Session Lock...";
         
         const statusRef = db.collection("onlineStatus").doc(roll);
         const statusSnap = await statusRef.get();
         
         if (statusSnap.exists && statusSnap.data().isOnline) {
-            // 🚨 LOGIN BLOCKED: User is already active
+            // 🚨 LOGIN BLOCKED: User is already active in the new project's Firestore
             alert("⚠️ This ID is currently active on another device. Please log out from the other device.");
             
             // Re-enable button and return
@@ -462,15 +462,27 @@ async function handleLogin(e) {
             return;
         }
 
-        // --- STEP 3: SUCCESS & SET ONLINE STATUS ---
+        // --- STEP 3: SUCCESS, SET ONLINE STATUS & INITIALIZE SCORE ---
          
-        // ✅ Set online status in Firebase to lock the session
+        // ✅ 1. Set online status in Firebase to lock the session
         await statusRef.set({ 
             isOnline: true, 
             loginTime: firebase.firestore.FieldValue.serverTimestamp(),
-            device: navigator.userAgent.substring(0, 150) // Save device info
+            device: navigator.userAgent.substring(0, 150) 
         });
+        
+        // 🌟 2. Initialize team score if it doesn't exist (CRITICAL for leaderboard)
+        const scoreRef = db.collection("teamScores").doc(roll);
+        const scoreSnap = await scoreRef.get();
 
+        if (!scoreSnap.exists) {
+            await scoreRef.set({
+                name: teamName,
+                score: 0,
+                roll: roll // For completeness
+            });
+        }
+        
         alert("✅ Welcome to the Maze!!!");
         localStorage.setItem("roll", roll);
         window.location.href = "riddles.html"; // Redirect to game page
