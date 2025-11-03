@@ -1,226 +1,875 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hogwarts Mystery Maze Login</title>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=EB+Garamond:wght@400;600&display=swap" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-
-<style>
-  :root {
-    --gold: #d4af37;
-    --deep-blue: #0b0f1a;
-    --light-gold: #ffdf70;
-    --golden-glow: rgba(255, 215, 100, 0.7);
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: radial-gradient(circle at 20% 20%, #11182a, #030610 90%);
-    color: #fff;
-    font-family: 'EB Garamond', serif;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    perspective: 1200px;
-    position: relative;
-    touch-action: manipulation;
-  }
-
-  body::before {
-    content: "";
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: url('hogwarts.png') center/cover no-repeat;
-    opacity: 0.4;
-    z-index: -3;
-    filter: blur(1px);
-  }
-
-  .login-card {
-    width: clamp(340px, 92vw, 450px);
-    padding: clamp(2rem, 6vw, 2.5rem);
-    border-radius: 20px;
-    background: rgba(30, 25, 10, 0.85);
-    background-image: url('parchment-texture.jpg');
-    background-size: cover;
-    box-shadow: 0 0 40px rgba(212, 175, 55, 0.5), inset 0 0 15px rgba(255, 215, 100, 0.3);
-    border: 3px solid var(--gold);
-    z-index: 2;
-    position: relative;
-  }
-
-  .login-card h1 {
-    font-family: 'Cinzel Decorative', serif;
-    font-size: clamp(2rem, 6.5vw, 2.5rem);
-    text-align: center;
-    margin-bottom: 1.5rem;
-    color: var(--light-gold);
-    text-shadow: 0 0 15px var(--golden-glow);
-  }
-
-  label {
-    font-size: clamp(1rem, 4vw, 1.125rem);
-    color: var(--light-gold);
-    display: block;
-    margin-bottom: 1rem;
-    font-weight: 600;
-  }
-
-  input {
-    width: 100%;
-    padding: clamp(0.875rem, 3vw, 1rem);
-    margin-bottom: clamp(1.25rem, 3.5vw, 1.5rem);
-    border-radius: 12px;
-    border: 2px solid var(--gold);
-    background: rgba(255, 255, 255, 0.15);
-    color: white;
-    font-family: 'EB Garamond', serif;
-    font-size: clamp(1rem, 4vw, 1.125rem);
-    transition: all 0.3s ease;
-  }
-
-  input:focus {
-    outline: none;
-    border-color: var(--light-gold);
-    box-shadow: 0 0 15px var(--golden-glow);
-    background: rgba(255, 255, 255, 0.2);
-  }
-
-  button {
-    width: 100%;
-    padding: clamp(0.875rem, 3vw, 1rem);
-    background: linear-gradient(90deg, var(--gold), var(--light-gold));
-    border: none;
-    border-radius: 12px;
-    color: #000;
-    font-family: 'Cinzel Decorative', serif;
-    font-weight: 700;
-    font-size: clamp(1rem, 4vw, 1.125rem);
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-    /* ✅ fixed: allow normal tap */
-    touch-action: manipulation;
-  }
-
-  button:hover, button:active {
-    transform: scale(1.05);
-    box-shadow: 0 0 25px var(--golden-glow);
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Harry Potter Riddle Quest</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Harry+P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <style>
+        /* [ORIGINAL CSS STYLES ARE RETAINED HERE] */
+        body {
+            background: url('greathall.png') no-repeat center center fixed;
+            background-size: cover;
+            font-family: 'MedievalSharp', cursive;
+            color: #FFD700;
+            margin: 0;
+            overflow-x: hidden;
+            min-height: 100vh;
+            touch-action: manipulation;
+        }
+        #parallax-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: url('greathall.png') no-repeat center center;
+            background-size: cover;
+            transform: translateZ(-1px) scale(1.2);
+            transition: transform 0.3s ease-out;
+        }
+        .header {
+            background: rgba(0, 0, 0, 0.7);
+            border-bottom: 2px solid #FFD700;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            padding: 0.5rem 1rem;
+        }
+        .sidebar {
+            background: rgba(0, 0, 0, 0.8);
+            border-left: 2px solid #FFD700;
+            transition: all 0.3s ease;
+            overflow-y: auto;
+            perspective: 1000px;
+            width: 100%;
+            max-height: 40vh;
+            position: fixed;
+            bottom: 0;
+            border-top: 2px solid #FFD700;
+            z-index: 20;
+            transform: translateY(100%);
+        }
+        .sidebar.open {
+            transform: translateY(0);
+        }
+        .sidebar-toggle {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            z-index: 30;
+            background: #FFD700;
+            color: #1a1a1a;
+            padding: 0.5rem;
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(255,215,0,0.8);
+        }
+        @media (min-width: 768px) {
+            .sidebar {
+                width: 20rem;
+                max-height: none;
+                position: static;
+                border-top: none;
+                border-left: 2px solid #FFD700;
+                transform: none;
+            }
+            .sidebar-toggle {
+                display: none;
+            }
+        }
+        .main-content {
+            flex-direction: column;
+            min-height: calc(100vh - 4rem);
+        }
+        .riddle-card {
+            perspective: 2000px;
+            transform-style: preserve-3d;
+            animation: float 6s ease-in-out infinite;
+            margin-bottom: 2rem;
+            width: 90%;
+            max-width: 28rem;
+            height: 24rem;
+        }
+        @media (min-width: 640px) {
+            .riddle-card {
+                margin-bottom: 1rem;
+                max-width: 32rem;
+                height: 28rem;
+            }
+        }
+        .card-inner {
+            transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            transform-style: preserve-3d;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6), 0 0 20px rgba(255,215,0,0.3);
+            height: 100%;
+        }
+        .card-front, .card-back {
+            backface-visibility: hidden;
+            border-radius: 1rem;
+            padding: 1rem;
+            background: linear-gradient(135deg, rgba(139,0,0,0.9), rgba(0,0,0,0.9));
+            border: 2px solid #FFD700;
+            box-shadow: inset 0 0 10px #FFD700;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .card-back {
+            transform: rotateY(180deg);
+            background: linear-gradient(135deg, rgba(0,100,0,0.9), rgba(0,0,0,0.9));
+        }
+        .progress-map {
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            padding: 0.5rem;
+            max-width: 90%;
+        }
+        .progress-icon {
+            transition: transform 0.5s ease, color 0.3s;
+            animation: pulse 2s infinite;
+            font-size: 0.75rem;
+        }
+        .progress-icon.completed {
+            transform: scale(1.3) rotate(360deg);
+            animation: none;
+        }
+        .leaderboard-item {
+            transition: background 0.3s, transform 0.2s;
+            transform-style: preserve-3d;
+            transform: rotateX(5deg) rotateY(10deg);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+            animation: leaderboard-float 4s ease-in-out infinite;
+            font-size: 0.875rem;
+            padding: 0.5rem;
+        }
+        .leaderboard-item:hover {
+            background: rgba(255,215,0,0.3);
+            transform: translateX(5px) rotateX(0deg) rotateY(0deg);
+        }
+        .parallax {
+            transition: transform 0.2s ease-out;
+        }
+        .input-glow {
+            transition: box-shadow 0.3s;
+            font-size: 0.875rem;
+            padding: 0.5rem;
+            width: 100%;
+            max-width: 20rem;
+        }
+        .input-glow:focus {
+            box-shadow: 0 0 15px #FFD700;
+            outline: none;
+        }
+        .btn-glow {
+            transition: box-shadow 0.3s, transform 0.2s;
+            padding: 0.5rem 1.5rem;
+            font-size: 0.875rem;
+        }
+        .btn-glow:hover {
+            box-shadow: 0 0 20px #FFD700;
+            transform: scale(1.05);
+        }
+        #get-riddle-btn {
+            perspective: 1000px;
+            transform-style: preserve-3d;
+            animation: button-float 4s ease-in-out infinite;
+            background: linear-gradient(135deg, #FFD700, #DAA520);
+            border: 3px solid #FFD700;
+            box-shadow: 0 0 30px rgba(255,215,0,0.8), inset 0 0 15px rgba(255,255,255,0.4);
+            text-shadow: 0 0 10px rgba(0,0,0,0.7);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            padding: 0.75rem 2rem;
+            font-size: 1.25rem;
+            border-radius: 1rem;
+            color: #1a1a1a;
+            font-family: 'Harry P', sans-serif;
+            position: relative;
+            overflow: hidden;
+            z-index: 100;
+        }
+        #get-riddle-btn::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.3) 10%, transparent 10.1%);
+            background-size: 15px 15px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            animation: sparkle 3s infinite;
+        }
+        #get-riddle-btn:hover::before {
+            opacity: 0.7;
+        }
+        #get-riddle-btn:hover {
+            transform: scale(1.1) rotateX(15deg) rotateY(15deg);
+            box-shadow: 0 0 40px rgba(255,215,0,1), inset 0 0 20px rgba(255,255,255,0.6);
+        }
+        #get-riddle-btn:active {
+            transform: scale(0.95) rotateX(10deg) rotateY(10deg);
+            box-shadow: 0 0 20px rgba(255,215,0,0.6), inset 0 0 10px rgba(255,255,255,0.3);
+        }
+        @media (min-width: 640px) {
+            #get-riddle-btn {
+                padding: 1rem 2.5rem;
+                font-size: 1.5rem;
+            }
+        }
+        @keyframes float {
+            0% { transform: translateY(0px) rotateX(0deg); }
+            50% { transform: translateY(-5px) rotateX(3deg); }
+            100% { transform: translateY(0px) rotateX(0deg); }
+        }
+        @keyframes leaderboard-float {
+            0% { transform: rotateX(5deg) rotateY(10deg) translateY(0); }
+            50% { transform: rotateX(8deg) rotateY(5deg) translateY(-3px); }
+            100% { transform: translateY(0px) rotateX(5deg) rotateY(10deg); }
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        @keyframes button-float {
+            0% { transform: translateY(0px) rotateX(0deg) rotateY(0deg); }
+            50% { transform: translateY(-10px) rotateX(15deg) rotateY(15deg); }
+            100% { transform: translateY(0px) rotateX(0deg) rotateY(0deg); }
+        }
+        @keyframes sparkle {
+            0% { transform: translate(0, 0); }
+            50% { transform: translate(10%, 10%); }
+            100% { transform: translate(0, 0); }
+        }
+    </style>
 </head>
-<body>
+<body class="flex flex-col min-h-screen relative">
+    <div id="parallax-bg"></div>
 
-<div class="login-card" id="loginCard">
-  <h1>Mystery Maze Login</h1>
-  <form id="loginForm">
-    <label for="userid">Team Leader Roll No</label>
-    <input type="text" id="userid" name="userid" placeholder="e.g. 23001003132">
+    <header class="header flex justify-between items-center w-full z-10">
+        <h1 class="text-2xl font-['Harry_P'] text-yellow-400 sm:text-3xl md:text-4xl">Riddle Quest⚡️</h1>
+        <div class="flex items-center space-x-2 sm:space-x-4">
+            <span id="score-display" class="text-base sm:text-xl">Points: 0</span>
+            <button id="logout-btn" onclick="safeLogout()" class="px-2 py-1 bg-red-800 text-white rounded hover:bg-red-700"><i class="fas fa-sign-out-alt"></i></button> 
+            <button id="mute-btn" class="px-2 py-1 bg-gray-800 rounded hover:bg-gray-700"><i class="fas fa-volume-up"></i></button>
+        </div>
+    </header>
 
-    <label for="teamname">Team Name</label>
-    <input type="text" id="teamname" name="teamname" placeholder="e.g. Team Phoenix">
+    <main class="flex flex-1 overflow-hidden main-content">
+        <section class="flex-1 flex flex-col items-center justify-start p-2 sm:p-4 parallax">
+            <button id="get-riddle-btn" class="btn-glow">Get Riddle</button>
+            <div id="progress-map" class="progress-map flex justify-center mb-4 sm:mb-6 hidden"></div>
 
-    <label for="password">Leader Phone</label>
-    <input type="password" id="password" name="password" placeholder="10-digit number">
+            <div class="riddle-card relative hidden">
+                <div class="card-inner w-full h-full flex flex-col justify-center items-center">
+                    <div class="card-front flex flex-col justify-center items-center text-center">
+                        <p id="riddle-text" class="text-base sm:text-lg md:text-xl mb-2 sm:mb-4 font-bold"></p>
+                        <input id="answer-input" type="text" placeholder="ENTER ANSWER IN CAPS" class="p-2 rounded bg-gray-900 border border-yellow-400 text-white uppercase input-glow">
+                        <button id="submit-answer" class="mt-2 sm:mt-4 px-4 sm:px-6 py-1 sm:py-2 bg-yellow-600 text-black rounded-lg font-bold btn-glow">Cast Spell</button>
+                        <p id="attempts-text" class="mt-2 text-sm sm:text-base">Attempts left: 5</p>
+                        <p id="timer-text" class="mt-1 text-sm sm:text-base">Time: 0s</p>
+                    </div>
+                    <div class="card-back flex flex-col justify-center items-center text-center">
+                        <p id="back-text" class="text-base sm:text-lg md:text-xl mb-2 sm:mb-4 font-bold"></p>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-    <button type="submit" id="loginBtn">Enter the Maze</button>
-  </form>
-</div>
+        <aside id="sidebar" class="sidebar p-2 sm:p-4 flex flex-col">
+            <h2 class="text-lg sm:text-xl md:text-2xl mb-2 border-b border-yellow-400 pb-1">Leaderboard</h2>
+            <ul id="leaderboard-list" class="space-y-2"></ul>
+            <div id="team-stats" class="mt-4 sm:mt-6 hidden">
+                <h3 class="text-base sm:text-lg md:text-xl mb-2">Your Wand Stats</h3>
+                <ul id="stats-list" class="space-y-1 text-xs sm:text-sm"></ul>
+            </div>
+        </aside>
+        <button id="sidebar-toggle" class="sidebar-toggle"><i class="fas fa-bars"></i></button>
+    </main>
+
+    <audio id="correct-sound" src="https://www.soundjay.com/buttons/button-3.mp3"></audio>
+    <audio id="wrong-sound" src="https://www.soundjay.com/buttons/button-10.mp3"></audio>
 
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx1XADJH1lBrTb9p_Mb7Uxs_yghk25aoJlB1rkr2zW8TIW3U0l3_v8SUG9SysI6lROpIQ/exec";
-
+// ------------------------- 🔥 UPDATED FIREBASE CONFIGURATION (Mystery Maze) 🔥 -------------------------
+// NOTE: Google Apps Script (GAS) functionality has been removed for speed.
 const firebaseConfig = {
-  apiKey: "AIzaSyCcrlrS6mntArhEmMfOYCj4cIiDuAIiA7o",
-  authDomain: "mystery-maze-66d38.firebaseapp.com",
-  projectId: "mystery-maze-66d38",
-  storageBucket: "mystery-maze-66d38.firebasestorage.app",
-  messagingSenderId: "499137595833",
-  appId: "1:499137595833:web:ac246bd44e4f391987ce68",
-  measurementId: "G-T6LP1TWK80"
+    // UPDATED PROJECT DETAILS: mystery-maze-66d38
+    apiKey: "AIzaSyCcrlrS6mntArhEmMfOYCj4cIiDuAIiA7o", 
+    authDomain: "mystery-maze-66d38.firebaseapp.com",
+    projectId: "mystery-maze-66d38",
+    storageBucket: "mystery-maze-66d38.firebasestorage.app",
+    messagingSenderId: "499137595833",
+    appId: "1:499137595833:web:ac246bd44e4f391987ce68",
+    measurementId: "G-T6LP1TWK80"
 };
 
+// Initialize Firebase and Firestore
 const app = firebase.initializeApp(firebaseConfig);
-const db = app.firestore();
+const db = app.firestore(); // 'db' variable ab Firestore database ko point karega
+// ------------------------- END FIREBASE CONFIGURATION -------------------------
 
-document.addEventListener("DOMContentLoaded", function() {
-  const form = document.getElementById('loginForm');
-  const loginBtn = document.getElementById('loginBtn');
+let team = {
+    id: null,
+    name: "Gryffindor",
+    score: 0
+};
+let userProgress = {};
+const praises = ["Bravo!", "Excellent!", "Lightning fast!", "Well done!", "Impressive!", "Superb!", "Outstanding!", "Magnificent!", "Brilliant!", "Fantastic!"];
+let allRiddles = [];
+let teamRiddles = [];
+let currentRiddleIndex = 0;
+let attemptsUsed = 0;
+let maxAttempts = 5;
+let attemptsLeft = maxAttempts;
+let timer = 0;
+let timerInterval = null;
+let muted = false;
+let mouseX = 0, mouseY = 0;
+let targetX = 0, targetY = 0;
 
-  form.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    console.log("Button clicked");
+// ------------------------- ELEMENTS -------------------------
+const riddleText = document.getElementById('riddle-text');
+const answerInput = document.getElementById('answer-input');
+const submitBtn = document.getElementById('submit-answer');
+const attemptsText = document.getElementById('attempts-text');
+const timerText = document.getElementById('timer-text');
+const backText = document.getElementById('back-text');
+const leaderboardList = document.getElementById('leaderboard-list');
+const progressMap = document.getElementById('progress-map');
+const cardInner = document.querySelector('.card-inner');
+const muteBtn = document.getElementById('mute-btn');
+const teamStats = document.getElementById('team-stats');
+const statsList = document.getElementById('stats-list');
+const correctSound = document.getElementById('correct-sound');
+const wrongSound = document.getElementById('wrong-sound');
+const scoreDisplay = document.getElementById('score-display');
+const parallaxElements = document.querySelectorAll('.parallax');
+const parallaxBg = document.getElementById('parallax-bg');
+const getRiddleBtn = document.getElementById('get-riddle-btn');
+const riddleCard = document.querySelector('.riddle-card');
+const sidebar = document.getElementById('sidebar');
+const sidebarToggle = document.getElementById('sidebar-toggle');
 
-    const roll = document.getElementById('userid').value.trim();
-    const teamName = document.getElementById('teamname').value.trim();
-    const phone = document.getElementById('password').value.trim();
+// ------------------------- UNIQUE USER IDENTIFIER & SEEDED SHUFFLE -------------------------
+function getUserId() {
+    return localStorage.getItem('roll');
+}
 
-    if (!roll || !teamName || !phone) {
-      alert("⚠️ Please fill all fields (Roll No, Team Name, and Phone)!");
-      return;
+function hashString(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = (hash << 5) - hash + char;
+        hash |= 0;
+    }
+    return hash;
+}
+
+function mulberry32(seed) {
+    return function() {
+        let t = seed += 0x6D2B79F5;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+}
+
+function shuffleArray(array, seed) {
+    const rand = mulberry32(hashString(seed));
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(rand() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+// ------------------------- SIDEBAR TOGGLE -------------------------
+sidebarToggle.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+    sidebarToggle.innerHTML = sidebar.classList.contains('open') ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+});
+
+// ------------------------- 🔥 FIREBASE GLOBAL PROGRESS FUNCTIONS 🔥 -------------------------
+
+// NEW: Progress ko Firebase se load karega
+async function loadGlobalProgress() {
+    try {
+        const docRef = db.collection("progress").doc(team.id); 
+        const docSnap = await docRef.get();
+
+        if (docSnap.exists) {
+            console.log("Progress loaded from Firebase.");
+            return docSnap.data(); 
+        } else {
+            console.log("No progress found in Firebase for this user.");
+            return null;
+        }
+    } catch (error) {
+        console.error("Failed to load progress from Firebase:", error);
+        return null;
+    }
+}
+
+// UPDATED: Progress ko Firebase par Transaction ke saath save karega
+async function saveGlobalProgress() {
+    if (!team.id) return;
+    const progressRef = db.collection("progress").doc(team.id);
+
+    try {
+        await db.runTransaction(async (transaction) => {
+            // Transaction ensures data integrity across multiple devices
+            transaction.set(progressRef, userProgress);
+        });
+        console.log("Progress saved via transaction.");
+
+    } catch (error) {
+        console.error("Failed to save progress via transaction:", error);
+    }
+}
+
+// ------------------------- GRACEFUL LOGOUT FUNCTION (CRITICAL FOR SESSION LOCK) -------------------------
+async function safeLogout() {
+    const rollNumber = localStorage.getItem('roll');
+
+    if (rollNumber) {
+        try {
+            const statusRef = db.collection("onlineStatus").doc(rollNumber);
+            // 💥 Explicitly set isOnline to false
+            await statusRef.set({ 
+                isOnline: false, 
+                logoutTime: firebase.firestore.FieldValue.serverTimestamp() 
+            }); 
+            console.log("Firebase status successfully set to offline.");
+        } catch (error) {
+            console.error("Failed to set status offline on logout:", error);
+            // We ignore the error and proceed to logout locally
+        }
+    }
+
+    // 2. Clear Local Storage and Redirect
+    localStorage.removeItem('roll');
+    alert("You have been securely logged out. You can now log in on another device.");
+    window.location.href = 'login.html';
+}
+
+// NEW: Event listener for when the browser/tab is closed/reloaded
+window.addEventListener('beforeunload', (e) => {
+    const rollNumber = localStorage.getItem('roll');
+    if (rollNumber) {
+        // Use an asynchronous call that the browser might process before closing
+        db.collection("onlineStatus").doc(rollNumber).set({ isOnline: false });
+    }
+});
+// ------------------------- END LOGOUT HANDLERS -------------------------
+
+// ------------------------- 🔥 NEW FIREBASE SCORE & LEADERBOARD FUNCTIONS 🔥 -------------------------
+
+// NEW: 1. Firestore में स्कोर अपडेट करें
+async function updateScoreInFirebase(points) {
+    const teamRef = db.collection("teamScores").doc(team.id);
+    await teamRef.update({
+        score: firebase.firestore.FieldValue.increment(points) // स्कोर बढ़ाएँ
+    });
+}
+
+// NEW: 2. Firestore से स्कोर डिस्प्ले अपडेट करें
+async function updateScoreDisplayFirebase() {
+    try {
+        const teamRef = db.collection("teamScores").doc(team.id);
+        const docSnap = await teamRef.get();
+        if (docSnap.exists) {
+            team.score = docSnap.data().score || 0;
+            scoreDisplay.textContent = `Points: ${team.score}`;
+            team.name = docSnap.data().name || team.id; 
+        } else {
+             // यदि रोल नंबर टीमस्कोर में नहीं है, तो नया डॉक्यूमेंट बनाएँ (हालांकि login.html को यह करना चाहिए)
+             await teamRef.set({ name: team.id, score: 0 });
+             team.score = 0;
+             scoreDisplay.textContent = `Points: 0`;
+        }
+    } catch (error) {
+        console.error("Failed to fetch score from Firebase:", error);
+    }
+}
+
+// NEW: 3. Real-time Leaderboard सेटअप करें
+function setupRealtimeLeaderboard() {
+    // onSnapshot का उपयोग करते हुए, डेटा में बदलाव होते ही लीडरबोर्ड अपडेट होगा
+    db.collection("teamScores")
+      .orderBy("score", "desc") // स्कोर के अनुसार क्रमबद्ध करें
+      .onSnapshot((querySnapshot) => {
+        const data = [];
+        querySnapshot.forEach((doc) => {
+            // लीडरबोर्ड में teamScores से नाम और स्कोर दिखाता है
+            data.push({ name: doc.data().name, score: doc.data().score });
+        });
+        
+        // Leaderboard List ko update karein
+        leaderboardList.innerHTML = data.map((t, index) => `
+            <li class="leaderboard-item flex justify-between p-2 rounded bg-gray-900 border border-gray-700">
+                <span><i class="fas fa-trophy mr-1 ${index === 0 ? 'text-yellow-400' : index === 1 ? 'text-gray-300' : 'text-orange-600'}"></i>${t.name}</span>
+                <span>${t.score} pts</span>
+            </li>
+        `).join('');
+    });
+}
+
+// NEW: Firebase से सभी रिडल्स लोड करने का फंक्शन
+async function fetchAllRiddlesFromFirebase() {
+    const riddlesSnapshot = await db.collection("riddles").get();
+    const riddles = [];
+    riddlesSnapshot.forEach(doc => {
+        // Document ID (R1, R2, आदि) को qid के रूप में उपयोग करें
+        riddles.push({ qid: doc.id, ...doc.data() }); 
+    });
+    return riddles;
+}
+
+// ------------------------- INIT GAME FUNCTION -------------------------
+async function initGame() {
+    const rollNumber = getUserId();
+    if (!rollNumber) {
+        alert("Please log in to start the quest.");
+        window.location.href = 'login.html';
+        return;
+    }
+    team.id = rollNumber;
+
+    // 🚨 SESSION STATUS CHECK (वही रहेगा)
+    try {
+        const statusRef = db.collection("onlineStatus").doc(team.id);
+        const statusSnap = await statusRef.get();
+        if (!statusSnap.exists || !statusSnap.data().isOnline) {
+             alert("Your session was closed on another device or did not start correctly. Please log in again.");
+             localStorage.removeItem('roll');
+             window.location.href = 'login.html';
+             return;
+        }
+    } catch (error) {
+        console.error("Session integrity check failed:", error);
+    }
+
+
+    getRiddleBtn.classList.add('hidden');
+    riddleCard.classList.remove('hidden');
+    progressMap.classList.remove('hidden');
+
+    try {
+        // 🔄 Firebase से सीधे सभी रिडल्स प्राप्त करें
+        allRiddles = await fetchAllRiddlesFromFirebase();
+        
+        if (allRiddles && allRiddles.length > 0) {
+            
+            // 🔄 Load progress from Firebase
+            const globalProgress = await loadGlobalProgress(); 
+            
+            if (globalProgress) {
+                userProgress = globalProgress;
+                teamRiddles = userProgress.riddleOrder;
+                currentRiddleIndex = userProgress.currentRiddleIndex;
+            } else {
+                // Agar global progress nahi mila, toh naya progress generate karo aur save karo
+                let shuffledRiddles = shuffleArray([...allRiddles], team.id);
+                
+                // ⭐ QUEST_SIZE: 10 रिडल्स पर फिक्स किया गया
+                const QUEST_SIZE = 10; 
+                teamRiddles = shuffledRiddles.slice(0, QUEST_SIZE);
+                
+                userProgress = {
+                    riddleOrder: teamRiddles, 
+                    solvedRiddles: {},
+                    partialRiddles: {},
+                    currentRiddleIndex: 0
+                };
+                await saveGlobalProgress(); // Naya progress globally Firebase par save karo
+            }
+
+            progressMap.innerHTML = '';
+            // Ensure progress map reflects the size of the 10-riddle quest
+            teamRiddles.forEach((riddle, index) => { 
+                const span = document.createElement('i');
+                span.classList.add('fas', 'fa-circle', 'progress-icon', 'opacity-70');
+                if (userProgress.solvedRiddles[riddle.qid]) {
+                    span.classList.remove('opacity-70');
+                    span.classList.add('fa-check-circle', 'completed');
+                    span.style.color = '#00FF00';
+                }
+                progressMap.appendChild(span);
+            });
+            
+            // 🚨 नया: अब स्कोर सीधे Firebase से अपडेट करें और लीडरबोर्ड शुरू करें
+            await updateScoreDisplayFirebase(); 
+            setupRealtimeLeaderboard();
+            loadRiddle();
+        } else {
+            console.error("Failed to fetch riddles from Firebase.");
+            riddleText.textContent = "Error loading riddles from Firebase. Check your 'riddles' collection.";
+        }
+    } catch (error) {
+        console.error("Network or fetch error:", error);
+        riddleText.textContent = "Error connecting to the magical network. Please check your connection.";
+    }
+}
+
+// ------------------------- GET RIDDLE BUTTON LOGIC -------------------------
+getRiddleBtn.addEventListener('click', initGame);
+
+// ------------------------- MUTE TOGGLE -------------------------
+muteBtn.addEventListener('click', () => {
+    muted = !muted;
+    muteBtn.innerHTML = muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+});
+
+// ------------------------- TIMER -------------------------
+function startTimer() {
+    timer = 0;
+    timerText.textContent = "Time: 0s";
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+        timer++;
+        timerText.textContent = `Time: ${timer}s`;
+    }, 1000);
+}
+
+// ------------------------- LOAD RIDDLE -------------------------
+function loadRiddle() {
+    saveGlobalProgress(); // Progress ko Firebase par update karo
+
+    if (currentRiddleIndex >= teamRiddles.length) { // Checks against the 10-riddle limit
+        showFinalLeaderboard();
+        return;
+    }
+    const currentRiddle = teamRiddles[currentRiddleIndex];
+
+    if (userProgress.solvedRiddles[currentRiddle.qid]) {
+        currentRiddleIndex++;
+        loadRiddle();
+        return;
+    }
+    
+    if (userProgress.partialRiddles && userProgress.partialRiddles[currentRiddle.qid]) {
+        attemptsUsed = userProgress.partialRiddles[currentRiddle.qid].attemptsUsed;
+        attemptsLeft = maxAttempts - attemptsUsed;
+    } else {
+        attemptsUsed = 0;
+        attemptsLeft = maxAttempts;
+    }
+
+    attemptsText.textContent = `Attempts left: ${attemptsLeft}`;
+    answerInput.value = '';
+    riddleText.textContent = currentRiddle.question;
+    backText.textContent = '';
+    cardInner.style.transform = 'rotateY(0deg)';
+    submitBtn.disabled = false;
+    startTimer();
+}
+
+// ------------------------- SCORE LOGIC -------------------------
+function calculatePoints(attempt) {
+    if (attempt === 1) return 10;
+    if (attempt === 2) return 8;
+    if (attempt === 3) return 6;
+    if (attempt === 4) return 4;
+    if (attempt === 5) return 2;
+    return 0;
+}
+
+// ------------------------- UPDATE PROGRESS -------------------------
+function updateProgress(correct) {
+    const progressIcons = progressMap.querySelectorAll('.progress-icon');
+    if (progressIcons[currentRiddleIndex]) {
+        progressIcons[currentRiddleIndex].classList.remove('fa-circle', 'opacity-70');
+        progressIcons[currentRiddleIndex].classList.add(correct ? 'fa-check-circle' : 'fa-times-circle', 'completed');
+        progressIcons[currentRiddleIndex].style.color = correct ? '#00FF00' : '#FF0000';
+    }
+}
+
+// ------------------------- SUBMIT ANSWER (FINAL FAULT-TOLERANT VERSION) -------------------------
+submitBtn.addEventListener('click', async () => {
+    // 1. CRITICAL: Prevent double clicks and handle initial check
+    if (submitBtn.disabled) {
+        console.log("Button already disabled. Ignoring click.");
+        return;
     }
+    
+    const userAnswer = answerInput.value.trim().toUpperCase();
+    if (!userAnswer) return;
 
-    loginBtn.disabled = true;
-    loginBtn.textContent = "Entering...";
+    submitBtn.disabled = true; // Disable immediately
+    
+    attemptsUsed++;
+    let correct = false;
+    let submissionTimeout; // Variable to hold the timeout ID
+    const currentRiddle = teamRiddles[currentRiddleIndex];
+
+    // 2. CRITICAL: Add a timeout to force button re-enablement if network hangs
+    submissionTimeout = setTimeout(() => {
+        if (submitBtn.disabled) {
+            submitBtn.disabled = false;
+            console.error("Submission Timeout: Firebase check failed to respond in 5s. Re-enabling button.");
+            backText.textContent = "Network Timeout. Please try refreshing.";
+            cardInner.style.transform = 'rotateY(180deg)'; // Show feedback
+            setTimeout(() => { cardInner.style.transform = 'rotateY(0deg)'; }, 1500);
+        }
+    }, 5000); // Set timeout to 5 seconds
 
     try {
-      // Step 1: Verify with Google Script
-      const gasUrl = `${WEB_APP_URL}?path=login&roll=${roll}&phone=${phone}`;
-      const gasResponse = await fetch(gasUrl);
-      const gasData = await gasResponse.json();
+        // 🚀 Fetch answer from Firebase
+        const answerSnap = await db.collection("riddles").doc(currentRiddle.qid).get();
+        
+        // If the fetch succeeds, clear the safety timeout
+        clearTimeout(submissionTimeout); 
 
-      if (!gasData.success) {
-        alert("❌ Authentication Failed: " + gasData.message);
-        loginBtn.disabled = false;
-        loginBtn.textContent = "Enter the Maze";
-        return;
-      }
+        const correctAnswer = answerSnap.exists ? answerSnap.data().answer.toUpperCase() : null; 
 
-      // Step 2: Check active session
-      const statusRef = db.collection("onlineStatus").doc(roll);
-      const statusSnap = await statusRef.get();
+        if (correctAnswer && userAnswer === correctAnswer) { 
+            // --- CORRECT ANSWER LOGIC ---
+            correct = true;
+            clearInterval(timerInterval);
+            const points = calculatePoints(attemptsUsed);
+            
+            if (userProgress.partialRiddles) { delete userProgress.partialRiddles[currentRiddle.qid]; }
+            userProgress.solvedRiddles[currentRiddle.qid] = { attempts: attemptsUsed, score: points };
+            userProgress.currentRiddleIndex = currentRiddleIndex + 1;
+            await saveGlobalProgress();
 
-      if (statusSnap.exists && statusSnap.data().isOnline) {
-        alert("⚠️ This ID is already active on another device.");
-        loginBtn.disabled = false;
-        loginBtn.textContent = "Enter the Maze";
-        return;
-      }
+            await updateScoreInFirebase(points); 
+            await updateScoreDisplayFirebase();
 
-      // Step 3: Set online + create score if needed
-      await statusRef.set({
-        isOnline: true,
-        loginTime: firebase.firestore.FieldValue.serverTimestamp(),
-        device: navigator.userAgent.substring(0, 150)
-      });
+            const randomPraise = praises[Math.floor(Math.random() * praises.length)];
+            backText.textContent = `${randomPraise} +${points} points`;
+            if (!muted) correctSound.play();
+            cardInner.style.transform = 'rotateY(180deg)';
+            
+            setTimeout(() => {
+                updateProgress(correct);
+                cardInner.style.transform = 'rotateY(0deg)';
+                currentRiddleIndex++;
+                loadRiddle();
+            }, 2000);
 
-      const scoreRef = db.collection("teamScores").doc(roll);
-      const scoreSnap = await scoreRef.get();
-      if (!scoreSnap.exists) {
-        await scoreRef.set({ name: teamName, score: 0, roll });
-      }
+        } else {
+            // --- INCORRECT ANSWER LOGIC ---
+            if (!muted) wrongSound.play();
+            attemptsLeft--;
+            attemptsText.textContent = `Attempts left: ${attemptsLeft}`;
+            
+            if (attemptsLeft > 0) {
+                if (!userProgress.partialRiddles) userProgress.partialRiddles = {};
+                userProgress.partialRiddles[currentRiddle.qid] = { attemptsUsed: attemptsUsed };
+                await saveGlobalProgress();
 
-      alert("✅ Welcome to the Maze!");
-      localStorage.setItem("roll", roll);
-      window.location.href = "riddles.html";
-    } catch (err) {
-      console.error("Error:", err);
-      alert("⚠️ Unable to contact server. Please try again.");
-    } finally {
-      loginBtn.disabled = false;
-      loginBtn.textContent = "Enter the Maze";
+                backText.textContent = `Incorrect! Try again.`;
+                cardInner.style.transform = 'rotateY(180deg)';
+                
+                setTimeout(() => {
+                    cardInner.style.transform = 'rotateY(0deg)';
+                    backText.textContent = '';
+                    submitBtn.disabled = false; // Re-enable for the next attempt
+                }, 1500);
+            } else {
+                // Out of attempts logic...
+                clearInterval(timerInterval);
+                backText.textContent = `Out of attempts!`;
+                cardInner.style.transform = 'rotateY(180deg)';
+                updateProgress(correct);
+                
+                if (userProgress.partialRiddles) { delete userProgress.partialRiddles[currentRiddle.qid]; }
+                userProgress.currentRiddleIndex = currentRiddleIndex + 1;
+                await saveGlobalProgress(); 
+
+                setTimeout(() => {
+                    cardInner.style.transform = 'rotateY(0deg)';
+                    currentRiddleIndex++;
+                    loadRiddle();
+                }, 2500);
+            }
+        }
+    } catch (error) {
+        // Handle all network/Firebase errors gracefully
+        clearTimeout(submissionTimeout); 
+        console.error('Error during answer check (Firebase or Network):', error);
+        backText.textContent = `Network Error. Please try again.`;
+        submitBtn.disabled = false; // Force re-enable button immediately on error
     }
-  });
 });
+
+// ------------------------- FINAL LEADERBOARD -------------------------
+function showFinalLeaderboard() {
+    clearInterval(timerInterval);
+    riddleText.textContent = "🏆 Quest Completed! 🏆";
+    answerInput.style.display = 'none';
+    submitBtn.style.display = 'none';
+    attemptsText.style.display = 'none';
+    timerText.style.display = 'none';
+    backText.textContent = `Final Points: ${team.score}`;
+    cardInner.style.transform = 'rotateY(180deg)';
+    
+    teamStats.classList.remove('hidden');
+    statsList.innerHTML = Object.keys(userProgress.solvedRiddles).map(qid => {
+        const riddle = userProgress.solvedRiddles[qid];
+        const originalRiddle = allRiddles.find(r => r.qid === qid); 
+        const riddleName = originalRiddle ? `Riddle ${qid}` : `Riddle ${qid}`;
+
+        return `<li class="p-1 bg-gray-900 rounded border border-gray-700">${riddleName}: ${riddle.score} pts | ${riddle.attempts} attempts</li>`;
+    }).join('');
+
+    setTimeout(() => {
+        window.location.href = 'thankyou.html';
+    }, 10000);
+}
+
+// ------------------------- SMOOTH PARALLAX EFFECT -------------------------
+function lerp(start, end, factor) {
+    return start + (end - start) * factor;
+}
+
+document.addEventListener('mousemove', (e) => {
+    const { clientX, clientY } = e;
+    const { innerWidth: w, innerHeight: h } = window;
+    targetX = (clientX / w * 2 - 1) * 5;
+    targetY = (clientY / h * 2 - 1) * 5;
+});
+
+document.addEventListener('touchmove', (e) => {
+    const touch = e.touches[0];
+    const { innerWidth: w, innerHeight: h } = window;
+    targetX = (touch.clientX / w * 2 - 1) * 5;
+    targetY = (touch.clientY / h * 2 - 1) * 5;
+});
+
+function updateParallax() {
+    mouseX = lerp(mouseX, targetX, 0.1);
+    mouseY = lerp(mouseY, targetY, 0.1);
+
+    parallaxElements.forEach(el => {
+        el.style.transform = `translate(${mouseX}px, ${mouseY}px)`;
+    });
+
+    parallaxBg.style.transform = `translate(${mouseX/2}px, ${mouseY/2}px) scale(1.2)`;
+    requestAnimationFrame(updateParallax);
+}
+
+// Start parallax animation
+requestAnimationFrame(updateParallax);
+
+// ------------------------- INIT -------------------------
+// Check for user ID and initialize on load if found, otherwise the button starts the process.
+if (getUserId()) {
+    window.onload = initGame;
+} else {
+    // Show the button if not logged in, which will then redirect to login.
+    getRiddleBtn.classList.remove('hidden');
+}
+
 </script>
 </body>
 </html>
