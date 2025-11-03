@@ -298,19 +298,17 @@
     <audio id="wrong-sound" src="https://www.soundjay.com/buttons/button-10.mp3"></audio>
 
 <script>
-// ------------------------- GOOGLE APPS SCRIPT URL (Used for Leaderboard/Score) -------------------------
-const backendUrl = "/api/gasProxy";
-
-// ------------------------- 🔥 NEW FIREBASE CONFIGURATION (For Global Progress Sync) 🔥 -------------------------
+// ------------------------- 🔥 UPDATED FIREBASE CONFIGURATION (Mystery Maze) 🔥 -------------------------
+// NOTE: Google Apps Script (GAS) functionality has been removed for speed.
 const firebaseConfig = {
-    // NEW PROJECT DETAILS: login-d5978
-    apiKey: "AIzaSyB7-MsCUkAfyaYxPBYHFiiPr3mpXuHZ7MM", 
-    authDomain: "login-d5978.firebaseapp.com",
-    projectId: "login-d5978",
-    storageBucket: "login-d5978.firebasestorage.app",
-    messagingSenderId: "913994164259",
-    appId: "1:913994164259:web:d7193c0f5842e7be6e6996",
-    measurementId: "G-7HR05W3KV1"
+    // UPDATED PROJECT DETAILS: mystery-maze-66d38
+    apiKey: "AIzaSyCcrlrS6mntArhEmMfOYCj4cIiDuAIiA7o", 
+    authDomain: "mystery-maze-66d38.firebaseapp.com",
+    projectId: "mystery-maze-66d38",
+    storageBucket: "mystery-maze-66d38.firebasestorage.app",
+    messagingSenderId: "499137595833",
+    appId: "1:499137595833:web:ac246bd44e4f391987ce68",
+    measurementId: "G-T6LP1TWK80"
 };
 
 // Initialize Firebase and Firestore
@@ -472,6 +470,68 @@ window.addEventListener('beforeunload', (e) => {
 });
 // ------------------------- END LOGOUT HANDLERS -------------------------
 
+// ------------------------- 🔥 NEW FIREBASE SCORE & LEADERBOARD FUNCTIONS 🔥 -------------------------
+
+// NEW: 1. Firestore में स्कोर अपडेट करें
+async function updateScoreInFirebase(points) {
+    const teamRef = db.collection("teamScores").doc(team.id);
+    await teamRef.update({
+        score: firebase.firestore.FieldValue.increment(points) // स्कोर बढ़ाएँ
+    });
+}
+
+// NEW: 2. Firestore से स्कोर डिस्प्ले अपडेट करें
+async function updateScoreDisplayFirebase() {
+    try {
+        const teamRef = db.collection("teamScores").doc(team.id);
+        const docSnap = await teamRef.get();
+        if (docSnap.exists) {
+            team.score = docSnap.data().score || 0;
+            scoreDisplay.textContent = `Points: ${team.score}`;
+            team.name = docSnap.data().name || team.id; 
+        } else {
+             // यदि रोल नंबर टीमस्कोर में नहीं है, तो नया डॉक्यूमेंट बनाएँ (हालांकि login.html को यह करना चाहिए)
+             await teamRef.set({ name: team.id, score: 0 });
+             team.score = 0;
+             scoreDisplay.textContent = `Points: 0`;
+        }
+    } catch (error) {
+        console.error("Failed to fetch score from Firebase:", error);
+    }
+}
+
+// NEW: 3. Real-time Leaderboard सेटअप करें
+function setupRealtimeLeaderboard() {
+    // onSnapshot का उपयोग करते हुए, डेटा में बदलाव होते ही लीडरबोर्ड अपडेट होगा
+    db.collection("teamScores")
+      .orderBy("score", "desc") // स्कोर के अनुसार क्रमबद्ध करें
+      .onSnapshot((querySnapshot) => {
+        const data = [];
+        querySnapshot.forEach((doc) => {
+            // लीडरबोर्ड में teamScores से नाम और स्कोर दिखाता है
+            data.push({ name: doc.data().name, score: doc.data().score });
+        });
+        
+        // Leaderboard List को अपडेट करें
+        leaderboardList.innerHTML = data.map((t, index) => `
+            <li class="leaderboard-item flex justify-between p-2 rounded bg-gray-900 border border-gray-700">
+                <span><i class="fas fa-trophy mr-1 ${index === 0 ? 'text-yellow-400' : index === 1 ? 'text-gray-300' : 'text-orange-600'}"></i>${t.name}</span>
+                <span>${t.score} pts</span>
+            </li>
+        `).join('');
+    });
+}
+
+// NEW: Firebase से सभी रिडल्स लोड करने का फंक्शन
+async function fetchAllRiddlesFromFirebase() {
+    const riddlesSnapshot = await db.collection("riddles").get();
+    const riddles = [];
+    riddlesSnapshot.forEach(doc => {
+        // Document ID (R1, R2, आदि) को qid के रूप में उपयोग करें
+        riddles.push({ qid: doc.id, ...doc.data() }); 
+    });
+    return riddles;
+}
 
 // ------------------------- INIT GAME FUNCTION -------------------------
 async function initGame() {
@@ -483,7 +543,7 @@ async function initGame() {
     }
     team.id = rollNumber;
 
-    // 🚨 SESSION STATUS CHECK (Added for robustness, though login.html does the main check)
+    // 🚨 SESSION STATUS CHECK (वही रहेगा)
     try {
         const statusRef = db.collection("onlineStatus").doc(team.id);
         const statusSnap = await statusRef.get();
@@ -495,7 +555,6 @@ async function initGame() {
         }
     } catch (error) {
         console.error("Session integrity check failed:", error);
-        // Continue if check fails, relying on manual logout/relogin
     }
 
 
@@ -504,11 +563,10 @@ async function initGame() {
     progressMap.classList.remove('hidden');
 
     try {
-        const riddlesRes = await fetch(`${backendUrl}?path=getQuestions`);
-        const riddlesData = await riddlesRes.json();
+        // 🔄 Firebase से सीधे सभी रिडल्स प्राप्त करें
+        allRiddles = await fetchAllRiddlesFromFirebase();
         
-        if (riddlesData.success && riddlesData.questions && riddlesData.questions.length > 0) {
-            allRiddles = riddlesData.questions;
+        if (allRiddles && allRiddles.length > 0) {
             
             // 🔄 Load progress from Firebase
             const globalProgress = await loadGlobalProgress(); 
@@ -521,7 +579,8 @@ async function initGame() {
                 // Agar global progress nahi mila, toh naya progress generate karo aur save karo
                 let shuffledRiddles = shuffleArray([...allRiddles], team.id);
                 
-                const QUEST_SIZE = 10;
+                // ⭐ QUEST_SIZE: 10 रिडल्स पर फिक्स किया गया
+                const QUEST_SIZE = 10; 
                 teamRiddles = shuffledRiddles.slice(0, QUEST_SIZE);
                 
                 userProgress = {
@@ -546,11 +605,13 @@ async function initGame() {
                 progressMap.appendChild(span);
             });
             
-            await updateScoreDisplay();
+            // 🚨 नया: अब स्कोर सीधे Firebase से अपडेट करें और लीडरबोर्ड शुरू करें
+            await updateScoreDisplayFirebase(); 
+            setupRealtimeLeaderboard();
             loadRiddle();
         } else {
-            console.error("Failed to fetch riddles:", riddlesData.message);
-            riddleText.textContent = "Error loading riddles. Please try again later.";
+            console.error("Failed to fetch riddles from Firebase.");
+            riddleText.textContent = "Error loading riddles from Firebase. Check your 'riddles' collection.";
         }
     } catch (error) {
         console.error("Network or fetch error:", error);
@@ -643,11 +704,12 @@ submitBtn.addEventListener('click', async () => {
 
     const currentRiddle = teamRiddles[currentRiddleIndex];
     try {
-        // NOTE: Yeh checkAnswer call abhi bhi aapke GAS proxy par jaa rahi hai
-        const res = await fetch(`${backendUrl}?path=checkAnswer&qid=${currentRiddle.qid}&answer=${userAnswer}`);
-        const data = await res.json();
-        
-        if (data.isCorrect) {
+        // 🚀 नया: Firebase से सही उत्तर प्राप्त करें
+        const answerSnap = await db.collection("riddles").doc(currentRiddle.qid).get();
+        const correctAnswer = answerSnap.exists ? answerSnap.data().answer.toUpperCase() : null; 
+
+        // 🚀 नया: लोकल आंसर चेक (Faster!)
+        if (correctAnswer && userAnswer === correctAnswer) { 
             correct = true;
             clearInterval(timerInterval);
             const points = calculatePoints(attemptsUsed);
@@ -659,9 +721,9 @@ submitBtn.addEventListener('click', async () => {
             userProgress.currentRiddleIndex = currentRiddleIndex + 1;
             await saveGlobalProgress(); // Progress Firebase par save hua!
 
-            // Points ko leaderboard aur score update ke liye GAS backend par bhejte hain
-            await saveRiddlePointsToBackend(currentRiddle.qid, points);
-            await updateScoreDisplay();
+            // 🌟 नया: स्कोर सीधे Firestore में अपडेट करें
+            await updateScoreInFirebase(points); 
+            await updateScoreDisplayFirebase(); // Score refresh
 
             const randomPraise = praises[Math.floor(Math.random() * praises.length)];
             backText.textContent = `${randomPraise} +${points} points`;
@@ -714,70 +776,6 @@ submitBtn.addEventListener('click', async () => {
         submitBtn.disabled = false;
     }
 });
-
-// NEW FUNCTION: Send riddle-specific points to the backend (GAS)
-async function saveRiddlePointsToBackend(qid, points) {
-    try {
-        await fetch(`${backendUrl}?path=addPoints`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ rollNumber: team.id, qid, points }),
-        });
-        console.log(`Points for Riddle ${qid} successfully sent to backend (GAS).`);
-    } catch (error) {
-        console.error("Failed to send riddle points to backend (GAS):", error);
-    }
-}
-
-// ------------------------- UPDATE SCORE DISPLAY (Fetch from backend) -------------------------
-async function updateScoreDisplay() {
-    try {
-        const res = await fetch(`${backendUrl}?path=getScore&rollNumber=${team.id}`);
-        const data = await res.json();
-        if (data.success) {
-            team.score = data.score;
-            scoreDisplay.textContent = `Points: ${team.score}`;
-        } else {
-            console.error("Failed to fetch score from backend:", data.message);
-        }
-    } catch (error) {
-        console.error("Network or fetch error while getting score:", error);
-    }
-}
-
-// ------------------------- LEADERBOARD (Fetch from backend) -------------------------
-async function updateLeaderboard() {
-    try {
-        const res = await fetch(`${backendUrl}?path=leaderboard`);
-        const data = await res.json();
-        
-        if (!Array.isArray(data)) {
-            console.error("Leaderboard data is not an array:", data);
-            return;
-        }
-
-        data.sort((a, b) => b.score - a.score);
-        leaderboardList.innerHTML = data.map((t, index) => `
-            <li class="leaderboard-item flex justify-between p-2 rounded bg-gray-900 border border-gray-700">
-                <span><i class="fas fa-trophy mr-1 ${index === 0 ? 'text-yellow-400' : index === 1 ? 'text-gray-300' : 'text-orange-600'}"></i>${t.name}</span>
-                <span>${t.score} pts</span>
-            </li>
-        `).join('');
-    } catch (error) {
-        console.error('Error fetching leaderboard:', error);
-        leaderboardList.innerHTML = `
-            <li class="leaderboard-item flex justify-between p-2 rounded bg-gray-900 border border-gray-700">
-                <span><i class="fas fa-trophy mr-1 text-yellow-400"></i>${team.name}</span>
-                <span>${team.score} pts</span>
-            </li>
-        `;
-    }
-}
-
-// Poll leaderboard every 5s for real-time
-setInterval(updateLeaderboard, 5000);
 
 // ------------------------- FINAL LEADERBOARD -------------------------
 function showFinalLeaderboard() {
